@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     borderBottomColor: Colors.zircon,
     borderBottomWidth: 2,
-    marginLeft: Platform.OS === 'android' ? 16 : 0
+    marginLeft: Platform.OS === 'ios' ? 16 : 0
   },
   row: {
     flexDirection: "row"

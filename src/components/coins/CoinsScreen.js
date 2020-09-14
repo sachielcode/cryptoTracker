@@ -3,16 +3,19 @@ import { View, Text, Pressable, StyleSheet, Alert, FlatList, ActivityIndicator }
 import { State, Directions, FlingGestureHandler } from 'react-native-gesture-handler';
 import Http from '../../libraries/http';
 import CoinsItem from './CoinsItem';
+import CoinsSearch from './CoinsSearch';
 import Colors from '../../resources/colors';
 
 const CoinsScreen = (props) => {
 
   const [coins, setCoins] = useState([]);
+  const [allCoins, setAllCoins] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const getCoins = async () => {
     const response = await Http.instance.get('https://api.coinlore.net/api/tickers/');
     setCoins(response.data);
+    setAllCoins(response.data);
     setLoading(false);
     // console.log(coins)
   }
@@ -24,8 +27,17 @@ const CoinsScreen = (props) => {
     props.navigation.navigate('CoinDetail', { coin });
   }
 
+  const handleSearch = (query) => {
+    const coinsFiltered = allCoins.filter((coin) => {
+      return coin.name.toLowerCase().includes(query.toLowerCase()) || coin.symbol.toLowerCase().includes(query.toLowerCase());
+    });
+
+    setCoins(coinsFiltered);
+  }
+
   return (
     <View style={styles.container}>
+      <CoinsSearch onChange={handleSearch} />
       {loading ?
         <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
         : null
@@ -57,7 +69,7 @@ const styles = StyleSheet.create({
     padding: 8,
     backgroundColor: "#5971b5",
     borderRadius: 8,
-    margin: 16
+    margin: 16,
   },
   btnText: {
     color: "#fff",
