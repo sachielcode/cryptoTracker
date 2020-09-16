@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, Pressable, StyleSheet, SectionList, FlatList } from 'react-native';
+import { View, Text, Image, Pressable, Alert, StyleSheet, SectionList, FlatList } from 'react-native';
 import Http from '../../libraries/http';
 import Storage from '../../libraries/storage';
 import Colors from '../../resources/colors';
@@ -81,28 +81,38 @@ const CoinDetailScreen = (props) => {
     if (stored) {
       setIsFavorite(true);
     }
-    console.log(isFavorite);
   }
 
   const removeFavorite = async () => {
-    const key = `favorite-${coin.id}`;
-    const stored = await Storage.instance.remove(key);
-    if (stored) {
-      setIsFavorite(false);
-    }
+
+    Alert.alert('Remove favorite', 'Are you sure?', [
+      {
+        text: 'Cancel',
+        onPress: () => { },
+        style: 'cancel'
+      },
+      {
+        text: 'Remove',
+        onPress: async () => {
+          const key = `favorite-${coin.id}`;
+          const stored = await Storage.instance.remove(key);
+          setIsFavorite(false);
+        }
+      }
+    ])
+
   }
 
   const getFavorite = async () => {
     try {
 
       const key = `favorite-${coin.id}`;
-      console.log(key)
       const favStr = await Storage.instance.get(key);
       if (favStr != null) {
         setIsFavorite(true);
       }
     } catch (error) {
-
+      console.log('getFavorite error ', error);
     }
   }
 
