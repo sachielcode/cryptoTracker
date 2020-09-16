@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, StyleSheet, SectionList, FlatList } from 'react-native';
+import { View, Text, Image, Pressable, StyleSheet, SectionList, FlatList } from 'react-native';
 import Http from '../../libraries/http';
+import Storage from '../../libraries/storage';
 import Colors from '../../resources/colors';
 import CoinMarketItem from './CoinMarketItem';
 
@@ -10,6 +11,7 @@ const CoinDetailScreen = (props) => {
   const [image, setImage] = useState('');
   const [sections, setSections] = useState([]);
   const [markets, setMarkets] = useState([]);
+  const [isFavorite, setIsFavorite] = useState(false);
 
   const getMarkets = async (coinId) => {
     const url = `https://api.coinlore.net/api/coin/markets/?id=${coinId}`;
@@ -25,8 +27,12 @@ const CoinDetailScreen = (props) => {
     getMarkets(coin.id);
     setCoin(coin);
     setSections(getSections(coin));
-
+    getFavorite();
   }, []);
+
+  useEffect(() => {
+    getFavorite();
+  }, [coin]);
 
   const getSymbolIcon = (name) => {
     if (name) {
@@ -59,13 +65,58 @@ const CoinDetailScreen = (props) => {
     return sections;
   }
 
+  const toggleFavorite = () => {
+    if (isFavorite) {
+      removeFavorite()
+    }
+    else {
+      addFavorite()
+    }
+  }
+
+  const addFavorite = async () => {
+    const favorite = JSON.stringify(coin);
+    const key = `favorite-${coin.id}`;
+    const stored = await Storage.instance.store(key, favorite);
+    if (stored) {
+      setIsFavorite(true);
+    }
+    console.log(isFavorite);
+  }
+
+  const removeFavorite = async () => {
+    const key = `favorite-${coin.id}`;
+    const stored = await Storage.instance.remove(key);
+    if (stored) {
+      setIsFavorite(false);
+    }
+  }
+
+  const getFavorite = async () => {
+    try {
+
+      const key = `favorite-${coin.id}`;
+      console.log(key)
+      const favStr = await Storage.instance.get(key);
+      if (favStr != null) {
+        setIsFavorite(true);
+      }
+    } catch (error) {
+
+    }
+  }
 
   return (
 
     <View style={styles.container}>
       <View style={styles.subHeader}>
-        <Image style={styles.iconImg} source={{ uri: getSymbolIcon(coin.name) }} />
-        <Text style={styles.titleText}>{coin.name}</Text>
+        <View style={styles.row}>
+          <Image style={styles.iconImg} source={{ uri: getSymbolIcon(coin.name) }} />
+          <Text style={styles.titleText}>{coin.name}</Text>
+        </View>
+        <Pressable style={[styles.btnFavorite, isFavorite ? styles.btnFavoriteRemove : styles.btnFavoriteAdd]} onPress={toggleFavorite}>
+          <Text style={styles.btnFavoriteText}>{isFavorite ? 'Remove Favorite' : 'Add favorite'}</Text>
+        </Pressable>
       </View>
       <SectionList
         style={styles.section}
@@ -106,7 +157,11 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.1)",
     padding: 16,
     flexDirection: "row",
-    alignItems: "center"
+    alignItems: "center",
+    justifyContent: "space-between"
+  },
+  row: {
+    flexDirection: "row",
   },
   titleText: {
     fontSize: 16,
@@ -146,6 +201,19 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 16,
     alignSelf: "center"
+  },
+  btnFavorite: {
+    padding: 8,
+    borderRadius: 8
+  },
+  btnFavoriteAdd: {
+    backgroundColor: Colors.picton,
+  },
+  btnFavoriteRemove: {
+    backgroundColor: Colors.carmine,
+  },
+  btnFavoriteText: {
+    color: Colors.white
   }
 });
 
